@@ -62,6 +62,21 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        journal: {
+          DEFAULT: "hsl(var(--journal))",
+          foreground: "hsl(var(--journal-foreground))",
+          muted: "hsl(var(--journal-muted))",
+          accent: "hsl(var(--journal-accent))",
+          warm: "hsl(var(--journal-warm))",
+          line: "hsl(var(--journal-line))",
+        },
+        pastel: {
+          sage: "hsl(var(--pastel-sage))",
+          peach: "hsl(var(--pastel-peach))",
+          lavender: "hsl(var(--pastel-lavender))",
+          sky: "hsl(var(--pastel-sky))",
+          cream: "hsl(var(--pastel-cream))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
