@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,10 @@ import {
   Moon, 
   LogOut, 
   Coins,
-  User
+  User,
+  LayoutDashboard,
+  ShoppingBag,
+  Table2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -18,11 +22,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useHabits } from '@/hooks/useHabits';
+import { cn } from '@/lib/utils';
+
+const navItems = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/tracker', icon: Table2, label: 'Tracker' },
+  { to: '/rewards', icon: ShoppingBag, label: 'Shop' },
+];
 
 export default function Header() {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { profile } = useHabits();
+  const location = useLocation();
 
   return (
     <motion.header
@@ -31,25 +43,50 @@ export default function Header() {
       className="glass border-b border-border/50 sticky top-0 z-50"
     >
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold text-foreground">Habitflow</span>
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
+              <Sparkles className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold text-foreground hidden sm:block">Habitflow</span>
+          </Link>
+
+          {/* Navigation */}
+          <nav className="flex items-center gap-1">
+            {navItems.map(({ to, icon: Icon, label }) => {
+              const isActive = location.pathname === to;
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    isActive 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden md:inline">{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Coins Display */}
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20"
-          >
-            <Coins className="w-4 h-4 text-coin" />
-            <span className="text-sm font-semibold text-coin">
-              {profile?.coins || 0}
-            </span>
-          </motion.div>
+          <Link to="/rewards">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-coin/10 border border-coin/20 cursor-pointer"
+            >
+              <Coins className="w-4 h-4 text-coin" />
+              <span className="text-sm font-semibold text-coin">
+                {profile?.coins || 0}
+              </span>
+            </motion.div>
+          </Link>
 
           {/* Theme Toggle */}
           <Button
