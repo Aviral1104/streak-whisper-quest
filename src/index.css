@@ -45,6 +45,19 @@
     --success: 158 64% 42%;
     --success-foreground: 0 0% 100%;
 
+    --journal: 30 30% 96%;
+    --journal-foreground: 25 20% 25%;
+    --journal-muted: 30 15% 88%;
+    --journal-accent: 25 60% 70%;
+    --journal-warm: 35 45% 94%;
+    --journal-line: 30 20% 82%;
+
+    --pastel-sage: 145 25% 80%;
+    --pastel-peach: 20 70% 85%;
+    --pastel-lavender: 270 40% 85%;
+    --pastel-sky: 200 60% 85%;
+    --pastel-cream: 40 50% 92%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -58,10 +71,13 @@
     --gradient-accent: linear-gradient(135deg, hsl(38, 92%, 60%) 0%, hsl(45, 93%, 55%) 100%);
     --gradient-subtle: linear-gradient(135deg, hsl(150, 20%, 98%) 0%, hsl(160, 15%, 96%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(150, 15%, 98%) 100%);
+    --gradient-journal: linear-gradient(145deg, hsl(30, 30%, 98%) 0%, hsl(35, 25%, 96%) 100%);
+    --gradient-paper: linear-gradient(180deg, hsl(35, 30%, 97%) 0%, hsl(30, 25%, 95%) 100%);
     
     --shadow-soft: 0 2px 8px -2px hsla(160, 25%, 15%, 0.08);
     --shadow-medium: 0 4px 16px -4px hsla(160, 25%, 15%, 0.12);
     --shadow-glow: 0 0 20px hsla(158, 64%, 42%, 0.15);
+    --shadow-journal: 0 1px 3px hsla(30, 20%, 20%, 0.06), 0 4px 12px hsla(30, 20%, 20%, 0.04);
   }
 
   .dark {
@@ -102,6 +118,19 @@
     --success: 158 64% 48%;
     --success-foreground: 160 25% 8%;
 
+    --journal: 25 15% 15%;
+    --journal-foreground: 30 20% 90%;
+    --journal-muted: 25 10% 25%;
+    --journal-accent: 30 40% 50%;
+    --journal-warm: 30 20% 18%;
+    --journal-line: 25 10% 28%;
+
+    --pastel-sage: 145 20% 35%;
+    --pastel-peach: 20 50% 45%;
+    --pastel-lavender: 270 30% 50%;
+    --pastel-sky: 200 45% 45%;
+    --pastel-cream: 40 30% 30%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -115,10 +144,13 @@
     --gradient-accent: linear-gradient(135deg, hsl(38, 85%, 55%) 0%, hsl(45, 90%, 55%) 100%);
     --gradient-subtle: linear-gradient(135deg, hsl(160, 20%, 8%) 0%, hsl(160, 18%, 10%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(160, 18%, 12%) 0%, hsl(160, 15%, 10%) 100%);
+    --gradient-journal: linear-gradient(145deg, hsl(25, 15%, 14%) 0%, hsl(30, 12%, 12%) 100%);
+    --gradient-paper: linear-gradient(180deg, hsl(25, 12%, 16%) 0%, hsl(30, 10%, 14%) 100%);
     
     --shadow-soft: 0 2px 8px -2px hsla(0, 0%, 0%, 0.3);
     --shadow-medium: 0 4px 16px -4px hsla(0, 0%, 0%, 0.4);
     --shadow-glow: 0 0 20px hsla(158, 64%, 48%, 0.2);
+    --shadow-journal: 0 1px 3px hsla(0, 0%, 0%, 0.2), 0 4px 12px hsla(0, 0%, 0%, 0.15);
   }
 }
 
@@ -185,5 +217,44 @@
   
   .dark .glass {
     background: hsla(160, 18%, 12%, 0.7);
+  }
+
+  .journal-paper {
+    background: var(--gradient-journal);
+    background-image: 
+      var(--gradient-journal),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 31px,
+        hsl(var(--journal-line) / 0.3) 31px,
+        hsl(var(--journal-line) / 0.3) 32px
+      );
+  }
+
+  .paper-texture {
+    position: relative;
+  }
+  
+  .paper-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.015;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .spreadsheet-cell {
+    @apply border border-border/50 transition-all duration-150;
+  }
+
+  .spreadsheet-cell:hover {
+    @apply bg-muted/50;
+  }
+
+  .spreadsheet-header {
+    @apply bg-muted/60 font-medium text-sm;
   }
 }
