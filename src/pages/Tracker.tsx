@@ -42,8 +42,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHabits } from '@/hooks/useHabits';
+import { useTimeLogs } from '@/hooks/useTimeLogs';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { exportToCSV } from '@/components/ExportData';
 
 export default function Tracker() {
   const { user, loading } = useAuth();
@@ -52,6 +54,7 @@ export default function Tracker() {
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [journalNotes, setJournalNotes] = useState<Record<string, string>>({});
   const { habits, completions, toggleCompletion, isLoading } = useHabits();
+  const { timeLogs } = useTimeLogs();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -176,33 +179,7 @@ export default function Tracker() {
   };
 
   const downloadExcel = () => {
-    const headers = ['Date', 'Day', ...habits.map(h => h.name), 'Completion %'];
-    const rows = monthDays.map(day => {
-      const dateStr = format(day, 'yyyy-MM-dd');
-      const displayDate = format(day, 'MMM dd, yyyy');
-      const dayName = format(day, 'EEEE');
-      const habitStatuses = habits.map(h => isCompleted(h.id, dateStr) ? '✓' : '');
-      const completionRate = getDayCompletionRate(dateStr);
-      return [displayDate, dayName, ...habitStatuses, `${Math.round(completionRate)}%`];
-    });
-
-    // Add summary row
-    rows.push([]);
-    rows.push(['Summary', '', ...habits.map(() => ''), '']);
-    rows.push(['Total Completed', '', String(monthlyStats.totalCompleted), '', '', '']);
-    rows.push(['Completion Rate', '', `${monthlyStats.completionRate}%`, '', '', '']);
-    rows.push(['Perfect Days', '', String(monthlyStats.perfectDays), '', '', '']);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `habits-${format(currentMonth, 'yyyy-MM')}.csv`;
-    link.click();
+    exportToCSV({ habits, completions, timeLogs, currentMonth });
   };
 
   if (loading || !user) {

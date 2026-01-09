@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import HabitCard from '@/components/HabitCard';
 import AddHabitDialog from '@/components/AddHabitDialog';
 import StatsCard from '@/components/StatsCard';
-import ProgressChart from '@/components/ProgressChart';
+import HabitAnalytics from '@/components/HabitAnalytics';
 import WeekView from '@/components/WeekView';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -233,9 +233,9 @@ export default function Dashboard() {
               onToggle={handleToggle}
             />
 
-            {/* Progress Chart */}
+            {/* Habit Analytics */}
             <div className="mt-8">
-              <ProgressChart habits={habits} completions={completions} />
+              <HabitAnalytics habits={habits} completions={completions} timeLogs={timeLogs} />
             </div>
           </>
         )}
