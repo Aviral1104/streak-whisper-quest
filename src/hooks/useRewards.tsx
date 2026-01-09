@@ -3,6 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
+// Streak freeze values for different reward types
+const STREAK_FREEZE_VALUES: Record<string, number> = {
+  '2474c8d8-6b0f-4f78-a0ae-3c3779fbbb0d': 1, // Streak Freeze (1 Day)
+  '3086eea6-ccf0-430e-8ebc-fee11f87abef': 1, // Streak Freeze (1 Day)
+  'f8639bcd-bbc7-407c-9340-e5cbd41be893': 3, // Streak Freeze (3 Days)
+  'b1033be8-b607-4cb0-8f29-d2f2e31dc1ac': 7, // Streak Freeze (Week)
+  '0abc4974-93cb-4d08-9260-a0d2d43cad8e': 3, // Extended Freeze (3 days)
+  'b2155de2-568b-4345-8258-99b0a5fb0e23': 7, // Extended Freeze (7 days)
+};
+
 export interface Reward {
   id: string;
   name: string;
@@ -86,10 +96,21 @@ export function useRewards() {
         throw new Error('You already own this reward');
       }
 
+      // Re-fetch current coin balance to prevent race conditions
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('coins')
+        .eq('id', user.id)
+        .single();
+      
+      if (!currentProfile || currentProfile.coins < reward.cost) {
+        throw new Error('Insufficient coins');
+      }
+
       // Deduct coins
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ coins: profile.coins - reward.cost })
+        .update({ coins: currentProfile.coins - reward.cost })
         .eq('id', user.id);
       
       if (updateError) throw updateError;
@@ -116,11 +137,35 @@ export function useRewards() {
         if (error) throw error;
       }
 
+      // For streak freezes, add to user_settings
+      if (reward.type === 'streak_freeze') {
+        const freezeDays = STREAK_FREEZE_VALUES[reward.id] || 1;
+        
+        // Get or create user settings
+        const { data: settings } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (settings) {
+          await supabase
+            .from('user_settings')
+            .update({ streak_freezes_remaining: settings.streak_freezes_remaining + freezeDays })
+            .eq('user_id', user.id);
+        } else {
+          await supabase
+            .from('user_settings')
+            .insert([{ user_id: user.id, streak_freezes_remaining: freezeDays }]);
+        }
+      }
+
       return reward;
     },
     onSuccess: (reward) => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['user_rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['user_settings'] });
       toast.success(`Purchased ${reward.name}! 🎉`);
     },
     onError: (error: Error) => {
