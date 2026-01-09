@@ -83,6 +83,16 @@ export default function Dashboard() {
   };
 
   const handleToggle = (habitId: string, date: string = today) => {
+    // Only allow toggling for today
+    if (date !== today) {
+      return;
+    }
+    // Get the habit and check its type
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit || habit.habit_type === 'hours') {
+      // Don't toggle hour-based habits
+      return;
+    }
     toggleCompletion.mutate({ habitId, date });
   };
 
@@ -181,14 +191,29 @@ export default function Dashboard() {
               
               <div className="grid gap-3 sm:grid-cols-2">
                 <AnimatePresence mode="popLayout">
-                  {habits.map((habit) => (
+                  {/* Checkbox habits */}
+                  {checkboxHabits.map((habit) => (
                     <HabitCard
                       key={habit.id}
                       habit={habit}
                       isCompleted={isCompletedToday(habit.id)}
-                      currentHours={habit.habit_type === 'hours' ? getHoursForDate(habit.id, today) : 0}
                       onToggle={() => handleToggle(habit.id)}
-                      onLogTime={habit.habit_type === 'hours' ? (hours) => handleLogTime(habit.id, hours) : undefined}
+                      onEdit={() => {
+                        setEditingHabit(habit);
+                        setIsAddOpen(true);
+                      }}
+                      onDelete={() => setDeletingHabit(habit)}
+                    />
+                  ))}
+                  {/* Time-based habits */}
+                  {timeBasedHabits.map((habit) => (
+                    <HabitCard
+                      key={habit.id}
+                      habit={habit}
+                      isCompleted={false}
+                      currentHours={getHoursForDate(habit.id, today)}
+                      onToggle={() => {}} // No-op for time-based
+                      onLogTime={(hours) => handleLogTime(habit.id, hours)}
                       onEdit={() => {
                         setEditingHabit(habit);
                         setIsAddOpen(true);
@@ -200,10 +225,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Week View */}
+            {/* Week View - Pass timeLogs for hour-based habits */}
             <WeekView 
-              habits={habits} 
+              habits={checkboxHabits} 
               completions={completions} 
+              timeLogs={timeLogs}
               onToggle={handleToggle}
             />
 

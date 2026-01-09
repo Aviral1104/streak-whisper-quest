@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
-import { format, subDays, isToday, parseISO, differenceInDays } from 'date-fns';
+import { format, subDays, isToday } from 'date-fns';
 
 export interface Habit {
   id: string;
@@ -152,6 +151,21 @@ export function useHabits() {
     mutationFn: async ({ habitId, date }: { habitId: string; date: string }) => {
       if (!user) throw new Error('Not authenticated');
       
+      // CRITICAL: Enforce date-locking - only allow today's date
+      const today = format(new Date(), 'yyyy-MM-dd');
+      if (date !== today) {
+        throw new Error('Can only toggle habits for today');
+      }
+      
+      // Get the habit to verify it's a checkbox type
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) throw new Error('Habit not found');
+      
+      // Only allow checkbox habits to use this toggle
+      if (habit.habit_type === 'hours') {
+        throw new Error('Use time logging for hour-based habits');
+      }
+      
       const existing = completions.find(
         c => c.habit_id === habitId && c.completed_at === date
       );
@@ -164,6 +178,18 @@ export function useHabits() {
         if (error) throw error;
         return { action: 'removed' };
       } else {
+        // Check for duplicate before inserting
+        const { data: existingCheck } = await supabase
+          .from('habit_completions')
+          .select('id')
+          .eq('habit_id', habitId)
+          .eq('completed_at', date)
+          .maybeSingle();
+        
+        if (existingCheck) {
+          return { action: 'already_completed' };
+        }
+        
         const { error } = await supabase
           .from('habit_completions')
           .insert([{ habit_id: habitId, user_id: user.id, completed_at: date }]);
@@ -193,6 +219,9 @@ export function useHabits() {
       if (result.action === 'added') {
         toast.success('+10 coins! 🪙');
       }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 

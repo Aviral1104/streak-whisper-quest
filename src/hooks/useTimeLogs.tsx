@@ -39,10 +39,20 @@ export function useTimeLogs() {
     mutationFn: async ({ habitId, hours, date, notes }: { habitId: string; hours: number; date: string; notes?: string }) => {
       if (!user) throw new Error('Not authenticated');
       
+      // CRITICAL: Enforce date-locking - only allow today's date
+      const today = format(new Date(), 'yyyy-MM-dd');
+      if (date !== today) {
+        throw new Error('Can only log time for today');
+      }
+      
       // Check if there's an existing log for this habit on this date
       const existing = timeLogs.find(
         log => log.habit_id === habitId && log.logged_at === date
       );
+
+      // Calculate the delta for coins (only award for new hours, not updates)
+      const previousHours = existing?.hours || 0;
+      const hoursDelta = hours - previousHours;
 
       if (existing) {
         // Update existing log
@@ -54,6 +64,35 @@ export function useTimeLogs() {
           .single();
         
         if (error) throw error;
+        
+        // Award coins only for additional hours logged
+        if (hoursDelta > 0) {
+          const coinsEarned = Math.min(Math.round(hoursDelta * 5), 50);
+          if (coinsEarned > 0) {
+            await supabase.from('coin_transactions').insert([{
+              user_id: user.id,
+              amount: coinsEarned,
+              type: 'earn',
+              reason: `Logged additional ${hoursDelta.toFixed(1)}h`
+            }]);
+            
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('coins')
+              .eq('id', user.id)
+              .single();
+            
+            if (profile) {
+              await supabase
+                .from('profiles')
+                .update({ coins: profile.coins + coinsEarned })
+                .eq('id', user.id);
+            }
+            
+            return { action: 'updated', data, coinsEarned };
+          }
+        }
+        
         return { action: 'updated', data };
       } else {
         // Create new log
@@ -96,15 +135,14 @@ export function useTimeLogs() {
       queryClient.invalidateQueries({ queryKey: ['time_logs'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       
-      if (result.action === 'created' && result.coinsEarned) {
+      if (result.coinsEarned) {
         toast.success(`+${result.coinsEarned} coins! 🪙`);
-      } else {
-        toast.success('Time logged!');
+      } else if (result.action === 'updated') {
+        toast.success('Time updated!');
       }
     },
-    onError: (error) => {
-      toast.error('Failed to log time');
-      console.error(error);
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 

@@ -313,6 +313,41 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          active_theme_id: string | null
+          created_at: string
+          id: string
+          streak_freezes_remaining: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_theme_id?: string | null
+          created_at?: string
+          id?: string
+          streak_freezes_remaining?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_theme_id?: string | null
+          created_at?: string
+          id?: string
+          streak_freezes_remaining?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_active_theme_id_fkey"
+            columns: ["active_theme_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
