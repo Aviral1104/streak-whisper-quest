@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { Plus, Target, Flame, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Plus, Target, Flame, CheckCircle2, TrendingUp, Clock } from 'lucide-react';
 import Header from '@/components/Header';
 import HabitCard from '@/components/HabitCard';
 import AddHabitDialog from '@/components/AddHabitDialog';
@@ -11,6 +11,7 @@ import WeekView from '@/components/WeekView';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { useHabits, Habit } from '@/hooks/useHabits';
+import { useTimeLogs } from '@/hooks/useTimeLogs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,18 +39,39 @@ export default function Dashboard() {
     isCompletedToday 
   } = useHabits();
 
+  const { timeLogs, logTime, getHoursForDate, getTotalHoursForWeek } = useTimeLogs();
+
   const today = format(new Date(), 'yyyy-MM-dd');
 
+  const checkboxHabits = habits.filter(h => h.habit_type !== 'hours');
+  const timeBasedHabits = habits.filter(h => h.habit_type === 'hours');
+
   const stats = useMemo(() => {
+    // Checkbox habits stats
     const todayCompletions = completions.filter(c => c.completed_at === today).length;
-    const totalStreak = habits.reduce((sum, h) => sum + h.current_streak, 0);
+    const totalStreak = checkboxHabits.reduce((sum, h) => sum + h.current_streak, 0);
     const longestStreak = Math.max(...habits.map(h => h.longest_streak), 0);
-    const completionRate = habits.length > 0 
-      ? Math.round((todayCompletions / habits.length) * 100) 
+    const checkboxRate = checkboxHabits.length > 0 
+      ? Math.round((todayCompletions / checkboxHabits.length) * 100) 
       : 0;
 
-    return { todayCompletions, totalStreak, longestStreak, completionRate };
-  }, [habits, completions, today]);
+    // Time-based habits stats
+    const todayHoursLogged = timeBasedHabits.reduce((sum, h) => {
+      return sum + getHoursForDate(h.id, today);
+    }, 0);
+    const weeklyHoursLogged = timeBasedHabits.reduce((sum, h) => {
+      return sum + getTotalHoursForWeek(h.id);
+    }, 0);
+
+    return { 
+      todayCompletions, 
+      totalStreak, 
+      longestStreak, 
+      completionRate: checkboxRate,
+      todayHoursLogged,
+      weeklyHoursLogged,
+    };
+  }, [habits, completions, today, checkboxHabits, timeBasedHabits, getHoursForDate, getTotalHoursForWeek]);
 
   const handleSaveHabit = (habit: Omit<Habit, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'current_streak' | 'longest_streak' | 'is_archived'>) => {
     if (editingHabit) {
@@ -62,6 +84,10 @@ export default function Dashboard() {
 
   const handleToggle = (habitId: string, date: string = today) => {
     toggleCompletion.mutate({ habitId, date });
+  };
+
+  const handleLogTime = (habitId: string, hours: number) => {
+    logTime.mutate({ habitId, hours, date: today });
   };
 
   const handleDeleteConfirm = () => {
@@ -113,10 +139,18 @@ export default function Dashboard() {
               <StatsCard
                 title="Today's Progress"
                 value={`${stats.completionRate}%`}
-                subtitle={`${stats.todayCompletions}/${habits.length} habits`}
+                subtitle={`${stats.todayCompletions}/${checkboxHabits.length} habits`}
                 icon={CheckCircle2}
                 variant="primary"
                 delay={0}
+              />
+              <StatsCard
+                title="Hours Today"
+                value={stats.todayHoursLogged.toFixed(1)}
+                subtitle={`${stats.weeklyHoursLogged.toFixed(1)}h this week`}
+                icon={Clock}
+                variant="accent"
+                delay={0.1}
               />
               <StatsCard
                 title="Current Streaks"
@@ -124,19 +158,12 @@ export default function Dashboard() {
                 subtitle="Total days"
                 icon={Flame}
                 variant="streak"
-                delay={0.1}
-              />
-              <StatsCard
-                title="Best Streak"
-                value={stats.longestStreak}
-                subtitle="Days in a row"
-                icon={TrendingUp}
-                variant="accent"
                 delay={0.2}
               />
               <StatsCard
                 title="Active Habits"
                 value={habits.length}
+                subtitle={`${checkboxHabits.length} checkbox, ${timeBasedHabits.length} timed`}
                 icon={Target}
                 delay={0.3}
               />
@@ -159,7 +186,9 @@ export default function Dashboard() {
                       key={habit.id}
                       habit={habit}
                       isCompleted={isCompletedToday(habit.id)}
+                      currentHours={habit.habit_type === 'hours' ? getHoursForDate(habit.id, today) : 0}
                       onToggle={() => handleToggle(habit.id)}
+                      onLogTime={habit.habit_type === 'hours' ? (hours) => handleLogTime(habit.id, hours) : undefined}
                       onEdit={() => {
                         setEditingHabit(habit);
                         setIsAddOpen(true);

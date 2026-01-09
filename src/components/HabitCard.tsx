@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Flame, MoreHorizontal, Trash2, Edit2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Check, Flame, MoreHorizontal, Trash2, Edit2, Clock, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +15,9 @@ import type { Habit } from '@/hooks/useHabits';
 interface HabitCardProps {
   habit: Habit;
   isCompleted: boolean;
+  currentHours?: number;
   onToggle: () => void;
+  onLogTime?: (hours: number) => void;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -22,10 +25,28 @@ interface HabitCardProps {
 export default function HabitCard({ 
   habit, 
   isCompleted, 
-  onToggle, 
+  currentHours = 0,
+  onToggle,
+  onLogTime,
   onEdit, 
   onDelete 
 }: HabitCardProps) {
+  const [isLogging, setIsLogging] = useState(false);
+
+  const isTimeBasedHabit = habit.habit_type === 'hours';
+  const targetHours = habit.target_hours_daily || 1;
+  const progressPercent = isTimeBasedHabit 
+    ? Math.min((currentHours / targetHours) * 100, 100) 
+    : 0;
+  const isTargetMet = currentHours >= targetHours;
+
+  const handleQuickAdd = (delta: number) => {
+    if (onLogTime) {
+      const newHours = Math.max(0, currentHours + delta);
+      onLogTime(newHours);
+    }
+  };
+
   return (
     <motion.div
       layout
@@ -35,40 +56,71 @@ export default function HabitCard({
       whileHover={{ y: -2 }}
       className={cn(
         "group relative p-4 rounded-2xl border transition-all duration-300",
-        isCompleted 
-          ? "bg-primary/5 border-primary/20" 
-          : "bg-card border-border hover:border-primary/30"
+        isTimeBasedHabit 
+          ? isTargetMet 
+            ? "bg-primary/5 border-primary/20"
+            : "bg-card border-border hover:border-primary/30"
+          : isCompleted 
+            ? "bg-primary/5 border-primary/20" 
+            : "bg-card border-border hover:border-primary/30"
       )}
     >
       <div className="flex items-start gap-4">
-        {/* Completion Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onToggle}
-          className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-300 shrink-0",
-            isCompleted 
-              ? "gradient-primary shadow-glow" 
-              : "bg-secondary hover:bg-primary/10 border border-border"
-          )}
-        >
-          {isCompleted ? (
-            <Check className="w-6 h-6 text-primary-foreground" />
-          ) : (
-            <span>{habit.icon}</span>
-          )}
-        </motion.button>
+        {/* Completion Button / Time Display */}
+        {isTimeBasedHabit ? (
+          <motion.div
+            className={cn(
+              "w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all duration-300 shrink-0",
+              isTargetMet 
+                ? "gradient-primary shadow-glow" 
+                : "bg-secondary border border-border"
+            )}
+          >
+            <Clock className={cn(
+              "w-4 h-4 mb-0.5",
+              isTargetMet ? "text-primary-foreground" : "text-muted-foreground"
+            )} />
+            <span className={cn(
+              "text-sm font-bold",
+              isTargetMet ? "text-primary-foreground" : "text-foreground"
+            )}>
+              {currentHours.toFixed(1)}h
+            </span>
+          </motion.div>
+        ) : (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onToggle}
+            className={cn(
+              "w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all duration-300 shrink-0",
+              isCompleted 
+                ? "gradient-primary shadow-glow" 
+                : "bg-secondary hover:bg-primary/10 border border-border"
+            )}
+          >
+            {isCompleted ? (
+              <Check className="w-6 h-6 text-primary-foreground" />
+            ) : (
+              <span>{habit.icon}</span>
+            )}
+          </motion.button>
+        )}
 
         {/* Habit Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
               <h3 className={cn(
-                "font-semibold text-foreground transition-colors",
-                isCompleted && "text-primary"
+                "font-semibold text-foreground transition-colors flex items-center gap-2",
+                (isTimeBasedHabit ? isTargetMet : isCompleted) && "text-primary"
               )}>
                 {habit.name}
+                {isTimeBasedHabit && (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {targetHours}h/day
+                  </span>
+                )}
               </h3>
               {habit.description && (
                 <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
@@ -101,26 +153,79 @@ export default function HabitCard({
             </DropdownMenu>
           </div>
 
-          {/* Streak Info */}
-          <div className="flex items-center gap-4 mt-3">
-            <div className="flex items-center gap-1.5">
-              <Flame className={cn(
-                "w-4 h-4",
-                habit.current_streak > 0 ? "text-streak" : "text-muted-foreground"
-              )} />
-              <span className={cn(
-                "text-sm font-medium",
-                habit.current_streak > 0 ? "text-streak" : "text-muted-foreground"
-              )}>
-                {habit.current_streak} day{habit.current_streak !== 1 ? 's' : ''}
+          {/* Time-based progress */}
+          {isTimeBasedHabit && (
+            <div className="mt-3 space-y-2">
+              <Progress value={progressPercent} className="h-2" />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickAdd(-0.5)}
+                  disabled={currentHours === 0}
+                  className="h-7 px-2"
+                >
+                  <Minus className="w-3 h-3" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickAdd(0.5)}
+                  className="h-7 px-2"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  0.5h
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickAdd(1)}
+                  className="h-7 px-2"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  1h
+                </Button>
+                {isTargetMet && (
+                  <span className="text-xs text-primary font-medium ml-auto">
+                    ✓ Target met!
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Streak Info (for checkbox habits) */}
+          {!isTimeBasedHabit && (
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-1.5">
+                <Flame className={cn(
+                  "w-4 h-4",
+                  habit.current_streak > 0 ? "text-streak" : "text-muted-foreground"
+                )} />
+                <span className={cn(
+                  "text-sm font-medium",
+                  habit.current_streak > 0 ? "text-streak" : "text-muted-foreground"
+                )}>
+                  {habit.current_streak} day{habit.current_streak !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {habit.longest_streak > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  Best: {habit.longest_streak} days
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Streak for time-based habits */}
+          {isTimeBasedHabit && habit.current_streak > 0 && (
+            <div className="flex items-center gap-1.5 mt-2">
+              <Flame className="w-4 h-4 text-streak" />
+              <span className="text-sm font-medium text-streak">
+                {habit.current_streak} day streak
               </span>
             </div>
-            {habit.longest_streak > 0 && (
-              <span className="text-xs text-muted-foreground">
-                Best: {habit.longest_streak} days
-              </span>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
