@@ -41,6 +41,59 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          id: string
+          is_completed: boolean
+          linked_habit_id: string | null
+          reminder_minutes: number | null
+          start_time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          id?: string
+          is_completed?: boolean
+          linked_habit_id?: string | null
+          reminder_minutes?: number | null
+          start_time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_completed?: boolean
+          linked_habit_id?: string | null
+          reminder_minutes?: number | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_linked_habit_id_fkey"
+            columns: ["linked_habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habit_completions: {
         Row: {
           completed_at: string
@@ -80,12 +133,15 @@ export type Database = {
           current_streak: number
           description: string | null
           frequency: string
+          habit_type: string
           icon: string | null
           id: string
           is_archived: boolean
           longest_streak: number
           name: string
           target_days: number[] | null
+          target_hours_daily: number | null
+          target_hours_weekly: number | null
           updated_at: string
           user_id: string
         }
@@ -95,12 +151,15 @@ export type Database = {
           current_streak?: number
           description?: string | null
           frequency?: string
+          habit_type?: string
           icon?: string | null
           id?: string
           is_archived?: boolean
           longest_streak?: number
           name: string
           target_days?: number[] | null
+          target_hours_daily?: number | null
+          target_hours_weekly?: number | null
           updated_at?: string
           user_id: string
         }
@@ -110,12 +169,15 @@ export type Database = {
           current_streak?: number
           description?: string | null
           frequency?: string
+          habit_type?: string
           icon?: string | null
           id?: string
           is_archived?: boolean
           longest_streak?: number
           name?: string
           target_days?: number[] | null
+          target_hours_daily?: number | null
+          target_hours_weekly?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -180,6 +242,44 @@ export type Database = {
           type?: string
         }
         Relationships: []
+      }
+      time_logs: {
+        Row: {
+          created_at: string
+          habit_id: string
+          hours: number
+          id: string
+          logged_at: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          hours: number
+          id?: string
+          logged_at?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          hours?: number
+          id?: string
+          logged_at?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_rewards: {
         Row: {

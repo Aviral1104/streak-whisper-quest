@@ -17,6 +17,9 @@ export interface Habit {
   current_streak: number;
   longest_streak: number;
   is_archived: boolean;
+  habit_type: 'checkbox' | 'hours';
+  target_hours_daily: number | null;
+  target_hours_weekly: number | null;
   created_at: string;
   updated_at: string;
 }

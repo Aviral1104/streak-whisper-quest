@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles } from 'lucide-react';
+import { Sparkles, Clock, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +37,9 @@ export default function AddHabitDialog({
   const [icon, setIcon] = useState('✓');
   const [color, setColor] = useState('#10B981');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
+  const [habitType, setHabitType] = useState<'checkbox' | 'hours'>('checkbox');
+  const [targetHoursDaily, setTargetHoursDaily] = useState('1');
+  const [targetHoursWeekly, setTargetHoursWeekly] = useState('10');
 
   useEffect(() => {
     if (editingHabit) {
@@ -45,12 +48,18 @@ export default function AddHabitDialog({
       setIcon(editingHabit.icon);
       setColor(editingHabit.color);
       setFrequency(editingHabit.frequency as 'daily' | 'weekly');
+      setHabitType(editingHabit.habit_type || 'checkbox');
+      setTargetHoursDaily(editingHabit.target_hours_daily?.toString() || '1');
+      setTargetHoursWeekly(editingHabit.target_hours_weekly?.toString() || '10');
     } else {
       setName('');
       setDescription('');
       setIcon('✓');
       setColor('#10B981');
       setFrequency('daily');
+      setHabitType('checkbox');
+      setTargetHoursDaily('1');
+      setTargetHoursWeekly('10');
     }
   }, [editingHabit, open]);
 
@@ -65,6 +74,9 @@ export default function AddHabitDialog({
       color,
       frequency,
       target_days: [0, 1, 2, 3, 4, 5, 6],
+      habit_type: habitType,
+      target_hours_daily: habitType === 'hours' ? parseFloat(targetHoursDaily) || 1 : null,
+      target_hours_weekly: habitType === 'hours' ? parseFloat(targetHoursWeekly) || 10 : null,
     });
     
     onOpenChange(false);
@@ -72,7 +84,7 @@ export default function AddHabitDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -81,11 +93,44 @@ export default function AddHabitDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Habit Type Selector */}
+          <div className="space-y-2">
+            <Label>Habit type</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setHabitType('checkbox')}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                  habitType === 'checkbox'
+                    ? 'border-primary bg-primary/5 shadow-glow'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <CheckSquare className={`w-6 h-6 ${habitType === 'checkbox' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-sm font-medium">Checkbox</span>
+                <span className="text-xs text-muted-foreground text-center">Simple daily completion</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setHabitType('hours')}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                  habitType === 'hours'
+                    ? 'border-primary bg-primary/5 shadow-glow'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <Clock className={`w-6 h-6 ${habitType === 'hours' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-sm font-medium">Time-based</span>
+                <span className="text-xs text-muted-foreground text-center">Track hours spent</span>
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="name">Habit name</Label>
             <Input
               id="name"
-              placeholder="e.g., Morning meditation"
+              placeholder={habitType === 'hours' ? 'e.g., Study DSA, Practice piano' : 'e.g., Morning meditation'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -102,6 +147,49 @@ export default function AddHabitDialog({
               rows={2}
             />
           </div>
+
+          {/* Hour targets for time-based habits */}
+          <AnimatePresence>
+            {habitType === 'hours' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4 overflow-hidden"
+              >
+                <div className="p-4 bg-muted/50 rounded-xl space-y-4">
+                  <h4 className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    Time Targets
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="daily-hours">Daily target (hours)</Label>
+                      <Input
+                        id="daily-hours"
+                        type="number"
+                        step="0.5"
+                        min="0.5"
+                        value={targetHoursDaily}
+                        onChange={(e) => setTargetHoursDaily(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weekly-hours">Weekly target (hours)</Label>
+                      <Input
+                        id="weekly-hours"
+                        type="number"
+                        step="0.5"
+                        min="0.5"
+                        value={targetHoursWeekly}
+                        onChange={(e) => setTargetHoursWeekly(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="space-y-2">
             <Label>Icon</Label>
