@@ -9,6 +9,7 @@ import StatsCard from '@/components/StatsCard';
 import HabitAnalytics from '@/components/HabitAnalytics';
 import WeekView from '@/components/WeekView';
 import CircularClock from '@/components/CircularClock';
+import DigitalClock from '@/components/DigitalClock';
 import WeeklyTimetable from '@/components/WeeklyTimetable';
 import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
   const [activeTab, setActiveTab] = useState('today');
+  const [lastLogTimestamp, setLastLogTimestamp] = useState<number>(0);
   
   const { 
     habits, 
@@ -103,6 +105,7 @@ export default function Dashboard() {
     
     logTime.mutate({ habitId, hours, date: today });
     startCooldown(habitId);
+    setLastLogTimestamp(Date.now()); // Trigger clock animation
   };
 
   const handleDeleteConfirm = () => {
@@ -135,19 +138,33 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
             {/* Main content */}
             <div className="space-y-8">
-              {/* Welcome Section */}
+              {/* Welcome Section with Digital Clock */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
               >
-                <h1 className="text-3xl font-bold text-foreground">
-                  {format(new Date(), 'EEEE, MMMM d')}
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  {habits.length > 0 
-                    ? `You've completed ${stats.todayCompletions} of ${checkboxHabits.length} habits today` 
-                    : 'Start building habits that last'}
-                </p>
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground">
+                    {format(new Date(), 'EEEE, MMMM d')}
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    {habits.length > 0 
+                      ? `You've completed ${stats.todayCompletions} of ${checkboxHabits.length} habits today` 
+                      : 'Start building habits that last'}
+                  </p>
+                </div>
+                
+                {/* Visible Digital Clock on Mobile/Tablet */}
+                <div className="lg:hidden">
+                  <DigitalClock 
+                    clockState={clockState} 
+                    size="sm" 
+                    showSeconds={true}
+                    showDate={false}
+                    variant="card"
+                  />
+                </div>
               </motion.div>
 
               {/* Stats Grid */}
@@ -323,6 +340,7 @@ export default function Dashboard() {
                     timeLogs={timeLogs}
                     size="md"
                     showDate={true}
+                    lastLogTimestamp={lastLogTimestamp}
                   />
                 </motion.div>
 
