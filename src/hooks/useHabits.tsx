@@ -13,6 +13,7 @@ export interface Habit {
   target_days: number[];
   color: string;
   icon: string;
+  custom_icon: string | null;
   current_streak: number;
   longest_streak: number;
   is_archived: boolean;

@@ -5,10 +5,11 @@ import { useRewards } from './useRewards';
 import { toast } from 'sonner';
 
 // Premium feature reward IDs
-const PREMIUM_FEATURE_IDS = {
+export const PREMIUM_FEATURE_IDS = {
   WEEKLY_REPORTS: '2f872f5d-8b86-4caa-9ca9-98ed2e5c6465',
   ANALYTICS_PRO: 'c0b6cf51-f230-4ed3-9ca9-58c8b2964c1c',
   CUSTOM_ICONS: 'e0ede08c-0057-4fad-9a14-a542eeed1c34',
+  TIME_REWIND: 'd7f8e9a0-1b2c-3d4e-5f6a-7b8c9d0e1f2a',
 };
 
 // Premium custom icons collection
@@ -29,6 +30,7 @@ export function usePremiumFeatures() {
   const hasWeeklyReports = hasReward(PREMIUM_FEATURE_IDS.WEEKLY_REPORTS);
   const hasAnalyticsPro = hasReward(PREMIUM_FEATURE_IDS.ANALYTICS_PRO);
   const hasCustomIcons = hasReward(PREMIUM_FEATURE_IDS.CUSTOM_ICONS);
+  const hasTimeRewind = hasReward(PREMIUM_FEATURE_IDS.TIME_REWIND);
 
   // Get user settings for premium features
   const { data: premiumSettings } = useQuery({
@@ -38,7 +40,7 @@ export function usePremiumFeatures() {
       
       const { data, error } = await supabase
         .from('user_settings')
-        .select('has_weekly_reports, has_analytics_pro, has_custom_icons, weekly_reports_enabled, last_weekly_report_sent_at')
+        .select('has_weekly_reports, has_analytics_pro, has_custom_icons, has_time_rewind, weekly_reports_enabled, last_weekly_report_sent_at, time_rewind_last_used_at')
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -49,6 +51,9 @@ export function usePremiumFeatures() {
   });
 
   const weeklyReportsEnabled = premiumSettings?.weekly_reports_enabled ?? false;
+  
+  // Check if time rewind was used recently (within last 30 days means it's consumed)
+  const isTimeRewindAvailable = hasTimeRewind && !premiumSettings?.has_time_rewind;
 
   // Toggle weekly reports
   const toggleWeeklyReports = async () => {
@@ -72,6 +77,27 @@ export function usePremiumFeatures() {
     }
   };
 
+  // Consume time rewind
+  const consumeTimeRewind = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      
+      const { error } = await supabase
+        .from('user_settings')
+        .update({ 
+          has_time_rewind: true,
+          time_rewind_last_used_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['premium_settings'] });
+      queryClient.invalidateQueries({ queryKey: ['user_rewards'] });
+    },
+  });
+
   // Activate premium feature after purchase
   const activatePremiumFeature = useMutation({
     mutationFn: async (featureId: string) => {
@@ -86,6 +112,9 @@ export function usePremiumFeatures() {
         updates.has_analytics_pro = true;
       } else if (featureId === PREMIUM_FEATURE_IDS.CUSTOM_ICONS) {
         updates.has_custom_icons = true;
+      } else if (featureId === PREMIUM_FEATURE_IDS.TIME_REWIND) {
+        // Time rewind is a consumable - just mark as owned initially
+        updates.has_time_rewind = false; // Will be set to true when consumed
       }
       
       const { error } = await supabase
@@ -104,6 +133,7 @@ export function usePremiumFeatures() {
         [PREMIUM_FEATURE_IDS.WEEKLY_REPORTS]: 'Weekly Reports',
         [PREMIUM_FEATURE_IDS.ANALYTICS_PRO]: 'Analytics Pro',
         [PREMIUM_FEATURE_IDS.CUSTOM_ICONS]: 'Custom Icons Pack',
+        [PREMIUM_FEATURE_IDS.TIME_REWIND]: 'Time Rewind',
       };
       
       toast.success(`${names[featureId] || 'Feature'} activated!`);
@@ -114,10 +144,13 @@ export function usePremiumFeatures() {
     hasWeeklyReports,
     hasAnalyticsPro,
     hasCustomIcons,
+    hasTimeRewind,
+    isTimeRewindAvailable,
     weeklyReportsEnabled,
     premiumSettings,
     toggleWeeklyReports,
     activatePremiumFeature,
+    consumeTimeRewind,
     PREMIUM_ICONS,
     PREMIUM_FEATURE_IDS,
   };

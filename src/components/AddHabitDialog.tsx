@@ -11,9 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import CustomIconPicker from '@/components/CustomIconPicker';
 import type { Habit } from '@/hooks/useHabits';
 
-const ICONS = ['✓', '🏃', '📚', '💧', '🧘', '💪', '🎯', '✍️', '🌱', '💤', '🍎', '🎨'];
+const STANDARD_ICONS = ['✓', '🏃', '📚', '💧', '🧘', '💪', '🎯', '✍️', '🌱', '💤', '🍎', '🎨'];
 const COLORS = [
   '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', 
   '#F59E0B', '#EF4444', '#06B6D4', '#84CC16'
@@ -45,10 +46,10 @@ export default function AddHabitDialog({
     if (editingHabit) {
       setName(editingHabit.name);
       setDescription(editingHabit.description || '');
-      setIcon(editingHabit.icon);
-      setColor(editingHabit.color);
+      setIcon(editingHabit.custom_icon || editingHabit.icon || '✓');
+      setColor(editingHabit.color || '#10B981');
       setFrequency(editingHabit.frequency as 'daily' | 'weekly');
-      setHabitType(editingHabit.habit_type || 'checkbox');
+      setHabitType(editingHabit.habit_type as 'checkbox' | 'hours' || 'checkbox');
       setTargetHoursDaily(editingHabit.target_hours_daily?.toString() || '1');
       setTargetHoursWeekly(editingHabit.target_hours_weekly?.toString() || '10');
     } else {
@@ -67,10 +68,14 @@ export default function AddHabitDialog({
     e.preventDefault();
     if (!name.trim()) return;
     
+    // Determine if it's a custom icon (not in standard icons)
+    const isCustomIcon = !STANDARD_ICONS.includes(icon);
+    
     onSave({
       name: name.trim(),
       description: description.trim() || null,
-      icon,
+      icon: isCustomIcon ? STANDARD_ICONS[0] : icon,
+      custom_icon: isCustomIcon ? icon : null,
       color,
       frequency,
       target_days: [0, 1, 2, 3, 4, 5, 6],
@@ -193,22 +198,11 @@ export default function AddHabitDialog({
 
           <div className="space-y-2">
             <Label>Icon</Label>
-            <div className="flex flex-wrap gap-2">
-              {ICONS.map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setIcon(i)}
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg transition-all ${
-                    icon === i 
-                      ? 'bg-primary/10 ring-2 ring-primary' 
-                      : 'bg-secondary hover:bg-secondary/80'
-                  }`}
-                >
-                  {i}
-                </button>
-              ))}
-            </div>
+            <CustomIconPicker
+              selectedIcon={icon}
+              onSelectIcon={setIcon}
+              standardIcons={STANDARD_ICONS}
+            />
           </div>
 
           <div className="space-y-2">
