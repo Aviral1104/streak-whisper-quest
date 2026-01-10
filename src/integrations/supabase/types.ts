@@ -131,6 +131,7 @@ export type Database = {
           color: string | null
           created_at: string
           current_streak: number
+          custom_icon: string | null
           description: string | null
           frequency: string
           habit_type: string
@@ -149,6 +150,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           current_streak?: number
+          custom_icon?: string | null
           description?: string | null
           frequency?: string
           habit_type?: string
@@ -167,6 +169,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           current_streak?: number
+          custom_icon?: string | null
           description?: string | null
           frequency?: string
           habit_type?: string
@@ -317,26 +320,41 @@ export type Database = {
         Row: {
           active_theme_id: string | null
           created_at: string
+          has_analytics_pro: boolean | null
+          has_custom_icons: boolean | null
+          has_weekly_reports: boolean | null
           id: string
+          last_weekly_report_sent_at: string | null
           streak_freezes_remaining: number
           updated_at: string
           user_id: string
+          weekly_reports_enabled: boolean | null
         }
         Insert: {
           active_theme_id?: string | null
           created_at?: string
+          has_analytics_pro?: boolean | null
+          has_custom_icons?: boolean | null
+          has_weekly_reports?: boolean | null
           id?: string
+          last_weekly_report_sent_at?: string | null
           streak_freezes_remaining?: number
           updated_at?: string
           user_id: string
+          weekly_reports_enabled?: boolean | null
         }
         Update: {
           active_theme_id?: string | null
           created_at?: string
+          has_analytics_pro?: boolean | null
+          has_custom_icons?: boolean | null
+          has_weekly_reports?: boolean | null
           id?: string
+          last_weekly_report_sent_at?: string | null
           streak_freezes_remaining?: number
           updated_at?: string
           user_id?: string
+          weekly_reports_enabled?: boolean | null
         }
         Relationships: [
           {
@@ -347,6 +365,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weekly_reports: {
+        Row: {
+          created_at: string
+          email_sent_to: string
+          id: string
+          report_data: Json | null
+          report_week_end: string
+          report_week_start: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_sent_to: string
+          id?: string
+          report_data?: Json | null
+          report_week_end: string
+          report_week_start: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_sent_to?: string
+          id?: string
+          report_data?: Json | null
+          report_week_end?: string
+          report_week_start?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
