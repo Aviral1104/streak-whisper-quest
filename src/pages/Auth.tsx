@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Flame, Target, ArrowRight, Loader2 } from 'lucide-react';
+import { Flame, Target, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
+import habitflowLogo from '@/assets/habitflow-logo.png';
 
 const emailSchema = z.string().email('Please enter a valid email');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -74,6 +75,18 @@ export default function Auth() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      }
+    });
+    if (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Branding */}
@@ -84,9 +97,7 @@ export default function Auth() {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={habitflowLogo} alt="Habitflow" className="w-10 h-10 rounded-xl" />
             <span className="text-2xl font-bold text-primary-foreground">Habitflow</span>
           </div>
         </motion.div>
@@ -148,9 +159,7 @@ export default function Auth() {
         >
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={habitflowLogo} alt="Habitflow" className="w-10 h-10 rounded-xl" />
             <span className="text-2xl font-bold text-foreground">Habitflow</span>
           </div>
 
@@ -207,7 +216,7 @@ export default function Auth() {
               ) : (
                 <>
                   {isLogin ? 'Sign in' : 'Create account'}
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </>
               )}
             </Button>
@@ -227,17 +236,7 @@ export default function Auth() {
             variant="outline" 
             className="w-full" 
             size="lg"
-            onClick={async () => {
-              const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                  redirectTo: `${window.location.origin}/`,
-                }
-              });
-              if (error) {
-                toast.error(error.message);
-              }
-            }}
+            onClick={handleGoogleSignIn}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
