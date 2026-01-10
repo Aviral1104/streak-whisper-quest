@@ -110,7 +110,7 @@ export default function HabitCard({
             {isCompleted ? (
               <Check className="w-6 h-6 text-primary-foreground" />
             ) : (
-              <span>{habit.icon}</span>
+              <span>{habit.custom_icon || habit.icon}</span>
             )}
           </motion.button>
         )}

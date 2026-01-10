@@ -255,7 +255,7 @@ export default function WeeklyTimetable({
                               <>
                                 {dayLogs.map((log, i) => (
                                   <div key={i} className="flex items-center gap-1">
-                                    <span>{log.habit.icon}</span>
+                                    <span>{log.habit.custom_icon || log.habit.icon}</span>
                                     <span>{log.habit.name}: {log.hours}h</span>
                                   </div>
                                 ))}
@@ -263,7 +263,7 @@ export default function WeeklyTimetable({
                                   const habit = checkboxHabits.find(h => h.id === comp.habit_id);
                                   return habit ? (
                                     <div key={i} className="flex items-center gap-1">
-                                      <span>{habit.icon}</span>
+                                      <span>{habit.custom_icon || habit.icon}</span>
                                       <span>{habit.name} ✓</span>
                                     </div>
                                   ) : null;

@@ -12,6 +12,8 @@ import CircularClock from '@/components/CircularClock';
 import DigitalClock from '@/components/DigitalClock';
 import WeeklyTimetable from '@/components/WeeklyTimetable';
 import EmptyState from '@/components/EmptyState';
+import PerksAndBadges from '@/components/PerksAndBadges';
+import StreakFreezeCard from '@/components/StreakFreezeCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useHabits, Habit } from '@/hooks/useHabits';
@@ -201,6 +203,14 @@ export default function Dashboard() {
                   delay={0.3}
                 />
               </div>
+
+              {/* Streak Freeze & Perks Section */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <StreakFreezeCard />
+              </div>
+
+              {/* Perks & Badges */}
+              <PerksAndBadges />
 
               {/* Tabs for different views */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

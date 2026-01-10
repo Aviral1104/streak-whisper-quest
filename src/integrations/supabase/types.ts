@@ -322,10 +322,12 @@ export type Database = {
           created_at: string
           has_analytics_pro: boolean | null
           has_custom_icons: boolean | null
+          has_time_rewind: boolean | null
           has_weekly_reports: boolean | null
           id: string
           last_weekly_report_sent_at: string | null
           streak_freezes_remaining: number
+          time_rewind_last_used_at: string | null
           updated_at: string
           user_id: string
           weekly_reports_enabled: boolean | null
@@ -335,10 +337,12 @@ export type Database = {
           created_at?: string
           has_analytics_pro?: boolean | null
           has_custom_icons?: boolean | null
+          has_time_rewind?: boolean | null
           has_weekly_reports?: boolean | null
           id?: string
           last_weekly_report_sent_at?: string | null
           streak_freezes_remaining?: number
+          time_rewind_last_used_at?: string | null
           updated_at?: string
           user_id: string
           weekly_reports_enabled?: boolean | null
@@ -348,10 +352,12 @@ export type Database = {
           created_at?: string
           has_analytics_pro?: boolean | null
           has_custom_icons?: boolean | null
+          has_time_rewind?: boolean | null
           has_weekly_reports?: boolean | null
           id?: string
           last_weekly_report_sent_at?: string | null
           streak_freezes_remaining?: number
+          time_rewind_last_used_at?: string | null
           updated_at?: string
           user_id?: string
           weekly_reports_enabled?: boolean | null
