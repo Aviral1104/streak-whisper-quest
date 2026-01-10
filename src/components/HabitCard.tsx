@@ -20,6 +20,10 @@ interface HabitCardProps {
   onLogTime?: (hours: number) => void;
   onEdit: () => void;
   onDelete: () => void;
+  canLogTime?: boolean;
+  cooldownRemaining?: number;
+  maxAllowed?: number;
+  blockReason?: string;
 }
 
 export default function HabitCard({ 
@@ -29,7 +33,11 @@ export default function HabitCard({
   onToggle,
   onLogTime,
   onEdit, 
-  onDelete 
+  onDelete,
+  canLogTime = true,
+  cooldownRemaining = 0,
+  maxAllowed = 1,
+  blockReason,
 }: HabitCardProps) {
   const [isLogging, setIsLogging] = useState(false);
 
@@ -157,40 +165,52 @@ export default function HabitCard({
           {isTimeBasedHabit && (
             <div className="mt-3 space-y-2">
               <Progress value={progressPercent} className="h-2" />
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickAdd(-0.5)}
-                  disabled={currentHours === 0}
-                  className="h-7 px-2"
-                >
-                  <Minus className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickAdd(0.5)}
-                  className="h-7 px-2"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  0.5h
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickAdd(1)}
-                  className="h-7 px-2"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  1h
-                </Button>
-                {isTargetMet && (
-                  <span className="text-xs text-primary font-medium ml-auto">
-                    ✓ Target met!
-                  </span>
-                )}
-              </div>
+              {cooldownRemaining > 0 ? (
+                <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
+                  ⏳ Cooldown: {cooldownRemaining}m remaining
+                </div>
+              ) : !canLogTime && blockReason ? (
+                <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1">
+                  🔒 {blockReason}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickAdd(-0.5)}
+                    disabled={currentHours === 0}
+                    className="h-7 px-2"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickAdd(0.5)}
+                    disabled={!canLogTime || 0.5 > maxAllowed}
+                    className="h-7 px-2"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    0.5h
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleQuickAdd(1)}
+                    disabled={!canLogTime || 1 > maxAllowed}
+                    className="h-7 px-2"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    1h
+                  </Button>
+                </div>
+              )}
+              {isTargetMet && (
+                <span className="text-xs text-primary font-medium">
+                  ✓ Target met!
+                </span>
+              )}
             </div>
           )}
 
