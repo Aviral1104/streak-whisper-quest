@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { 
-  Sparkles, 
   Sun, 
   Moon, 
   LogOut, 
@@ -12,7 +11,8 @@ import {
   User,
   LayoutDashboard,
   ShoppingBag,
-  Table2
+  Table2,
+  Settings
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useHabits } from '@/hooks/useHabits';
 import { cn } from '@/lib/utils';
+import habitflowLogo from '@/assets/habitflow-logo.png';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -45,9 +46,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={habitflowLogo} alt="Habitflow" className="w-9 h-9 rounded-xl shadow-soft" />
             <span className="text-xl font-bold text-foreground hidden sm:block">Habitflow</span>
           </Link>
 
@@ -120,6 +119,13 @@ export default function Header() {
                   {user?.email}
                 </p>
               </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="w-4 h-4 mr-2" />
